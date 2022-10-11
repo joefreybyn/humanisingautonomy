@@ -74,7 +74,7 @@ def main(video_path: str, title: str) -> NoReturn:
         cv2.namedWindow(title, cv2.WINDOW_AUTOSIZE)
 
         # run whilst there are frames and the window is still open
-        while success and is_window_open(title):
+        while success: # and is_window_open(title):
             # shrink it
             smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
 
