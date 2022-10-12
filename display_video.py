@@ -2,7 +2,11 @@ from math import floor
 from typing import NoReturn
 
 import cv2
+import json
 
+#converting json file to a dictionary
+with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections.json', 'r') as f:
+  dict1 = json.load(f)
 
 def open_video(path: str) -> cv2.VideoCapture:
     """Opens a video file.
@@ -66,6 +70,10 @@ def main(video_path: str, title: str) -> NoReturn:
     width, height = get_frame_dimensions(video_capture)
     wait_time = get_frame_display_time(video_capture)
 
+    #initialise frame id 
+    y = 1
+
+
     try:
         # read the first frame
         success, frame = video_capture.read()
@@ -77,6 +85,16 @@ def main(video_path: str, title: str) -> NoReturn:
         while success: # and is_window_open(title):
             # shrink it
             smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
+
+            #overlaying bounding boxes
+            frameid_as_string = str(y)
+            bounding_boxes = dict1[frameid_as_string]["bounding boxes"]
+            for list in bounding_boxes:
+                    cv2.rectangle(smaller_image, (list[0]//2, list[1]//2), ((list[0]//2 + list[2]//2) , list[1]//2 + list[3]//2), (0, 255, 0), -1)
+           
+            #next frame
+            y += 1
+
 
             # display it
             cv2.imshow(title, smaller_image)
