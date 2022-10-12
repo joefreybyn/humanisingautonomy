@@ -5,8 +5,8 @@ import cv2
 import json
 
 #converting json file to a dictionary
-with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections.json', 'r') as f:
-  dict1 = json.load(f)
+with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections.json', 'r') as detection_output:
+  dict1 = json.load(detection_output)
 
 def open_video(path: str) -> cv2.VideoCapture:
     """Opens a video file.
@@ -83,15 +83,33 @@ def main(video_path: str, title: str) -> NoReturn:
 
         # run whilst there are frames and the window is still open
         while success: # and is_window_open(title):
-            # shrink it
-            smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
-
+            
             #overlaying bounding boxes
             frameid_as_string = str(y)
             bounding_boxes = dict1[frameid_as_string]["bounding boxes"]
-            for list in bounding_boxes:
-                    cv2.rectangle(smaller_image, (list[0]//2, list[1]//2), ((list[0]//2 + list[2]//2) , list[1]//2 + list[3]//2), (0, 255, 0), -1)
+            detected_class = dict1[frameid_as_string]["detected classes"]
+
+            for list, list2 in zip(bounding_boxes, detected_class):
+                
+                if list2 == "car":              
+                    hsv = (225,225,225)          #white for cars
+                elif list2 == "person":
+                    hsv = (255,225,0)            #sky blue for people
+                elif list2 == "truck":
+                    hsv = (255,0,0)              #blue for trucks  
+                elif list2 == "bicycle":
+                    hsv = (0,225,0)              #green for bikes
+                elif list2 == "bus":
+                    hsv = (0,225,225)            #yellow for buses 
+                elif list2 == "motorbike":
+                    hsv = (255,0,225)            #pink for motorbike          
+                
+                cv2.rectangle(frame, (list[0], list[1]), ((list[0] + list[2]) , list[1] + list[3]), hsv, 2)
            
+            
+            # shrink it
+            smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
+
             #next frame
             y += 1
 
