@@ -89,22 +89,22 @@ def main(video_path: str, title: str) -> NoReturn:
             bounding_boxes = dict1[frameid_as_string]["bounding boxes"]
             detected_class = dict1[frameid_as_string]["detected classes"]
 
-            for list, list2 in zip(bounding_boxes, detected_class):
+            for box, object in zip(bounding_boxes, detected_class):
                 
-                if list2 == "car":              
-                    hsv = (225,225,225)          #white for cars
-                elif list2 == "person":
-                    hsv = (255,225,0)            #sky blue for people
-                elif list2 == "truck":
-                    hsv = (255,0,0)              #blue for trucks  
-                elif list2 == "bicycle":
-                    hsv = (0,225,0)              #green for bikes
-                elif list2 == "bus":
-                    hsv = (0,225,225)            #yellow for buses 
-                elif list2 == "motorbike":
-                    hsv = (255,0,225)            #pink for motorbike          
+                if object == "car":              
+                    bgr = (225,225,225)          #white for cars
+                elif object == "person":
+                    bgr = (255,225,0)            #sky blue for people
+                elif object == "truck":
+                    bgr = (255,0,0)              #blue for trucks  
+                elif object == "bicycle":
+                    bgr = (0,225,0)              #green for bikes
+                elif object == "bus":
+                    bgr = (0,225,225)            #yellow for buses 
+                elif object == "motorbike":
+                    bgr = (255,0,225)            #pink for motorbike          
                 
-                cv2.rectangle(frame, (list[0], list[1]), ((list[0] + list[2]) , list[1] + list[3]), hsv, 2)
+                cv2.rectangle(frame, (box[0], box[1]), ((box[0] + box[2]) , box[1] + box[3]), bgr, 2)
            
             
             # shrink it
