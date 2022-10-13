@@ -10,9 +10,7 @@ from cv2 import FONT_HERSHEY_COMPLEX
 from cv2 import FONT_HERSHEY_SCRIPT_COMPLEX
 from cv2 import FONT_HERSHEY_PLAIN
 
-#converting json file to a dictionary
-with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections.json', 'r') as detection_output:
-  dict1 = json.load(detection_output)
+
 colour = {
     "car"      :(225,225,225) ,        #white for cars
     "person"   :(255,225,0)   ,        #sky blue for people
@@ -104,6 +102,10 @@ def is_window_open(title: str) -> bool:
 
 
 def main(video_path: str, title: str) -> NoReturn:
+    #converting json file to a dictionary
+    with open(JSON_PATH, 'r') as detection_output:
+        dict = json.load(detection_output)
+    
     """Displays a video at half size until it is complete or the 'q' key is pressed.
 
     Args:
@@ -129,21 +131,29 @@ def main(video_path: str, title: str) -> NoReturn:
         # run whilst there are frames and the window is still open
         while success: # and is_window_open(title):
             
-            #overlaying bounding boxes
+            #retrieve bounding boxes and classes from json file
             frameid_as_string = str(frame_id)
-            bounding_boxes = dict1[frameid_as_string]["bounding boxes"]
-            detected_class = dict1[frameid_as_string]["detected classes"]
+            bounding_boxes = dict[frameid_as_string]["bounding boxes"]
+            detected_class = dict[frameid_as_string]["detected classes"]
             #create empty dictionary to append centroid every loop
-            centroid_dictionary = {}
-            centroid_dictionary[frame_id] = []
+            centroid = {}
+            centroid[frame_id] = []
 
             for box, object in zip(bounding_boxes, detected_class):
+                """taking elements from bounding_boxes 
+                 x = top left x coordinate
+                 y = top left y coordinate
+                 w = width 
+                 h = height
+                """
+                x, y, w, h = box
+                
                 #calculate centroid for pedestrians only
                 if object == "person":
                   
-                    centroid_dictionary[frame_id].append((box[0] + (box[2]//2) , box[1] + (box[3]//2)))
+                    centroid[frame_id].append((x + (w//2) , y + (h//2)))
 
-                    print(centroid_dictionary[frame_id])
+                    # print(centroid[frame_id])
 
                     # if new_frame_id == frame_id:
                     #     print('0')
@@ -154,15 +164,15 @@ def main(video_path: str, title: str) -> NoReturn:
                     # print (centroid_dictionary)
 
                     # plot name and centroid
-                    for coord in centroid_dictionary[frame_id]:
+                    for coord in centroid[frame_id]:
                         cv2.circle(frame, coord, 4, (0, 255, 0), -1)
-                        cv2.putText(frame, "ID: " + str(centroid_dictionary[frame_id]), (box[0], box[1]), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
+                        cv2.putText(frame, "ID: " + str(centroid[frame_id]), (x, y), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
 
                     # cv2.circle(frame, (centroid_dictionary[frame_id][0], centroid_dictionary[frame_id][1]), 4, (0, 255, 0), -1)
                     # cv2.putText(frame, "ID: " + str(centroid_dictionary[frame_id]), (box[0], box[1]), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
        
                 #plot rectangles
-                cv2.rectangle(frame, (box[0], box[1]), ((box[0] + box[2]) , box[1] + box[3]), colour[object], 2)
+                cv2.rectangle(frame, (x, y), ((x + w) , (y + h)), colour[object], 2)
                 
             
             # shrink it
@@ -188,4 +198,5 @@ def main(video_path: str, title: str) -> NoReturn:
 
 if __name__ == "__main__":
     VIDEO_PATH = "resources/video_1.mp4"
+    JSON_PATH = "resources/video_1_detections.json"
     main(VIDEO_PATH, "My Video")
