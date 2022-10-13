@@ -3,10 +3,55 @@ from typing import NoReturn
 
 import cv2
 import json
+from collections import OrderedDict
+import numpy as np
+
+from cv2 import FONT_HERSHEY_COMPLEX
+from cv2 import FONT_HERSHEY_SCRIPT_COMPLEX
+from cv2 import FONT_HERSHEY_PLAIN
 
 #converting json file to a dictionary
 with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections.json', 'r') as detection_output:
   dict1 = json.load(detection_output)
+colour = {
+    "car"      :(225,225,225) ,        #white for cars
+    "person"   :(255,225,0)   ,        #sky blue for people
+    "truck"    :(255,0,0)     ,        #blue for trucks  
+    "bicycle"  :(0,225,0)     ,        #green for bikes
+    "bus"      :(0,225,225)   ,        #yellow for buses 
+    "motorbike":(255,0,225)            #pink for motorbike 
+ }
+# Centroid tracking
+# class Tracker():
+#     def __init__(self, max_frame = 10):
+#         self.nextID = 0
+#         self.pedestrian = OrderedDict()
+#         self.disappeared = OrderedDict()
+#         self.max_frame = max_frame
+    
+#     def register(self, centroid):
+#         self.pedestrian[self.nextID] = centroid
+#         self.disappeared[self.nextID] = 0
+#         self.nextID += 1
+    
+#     def unregister(self, ID):
+#         del self.pedestrian[ID]
+#         del self.disappeared[ID]
+
+#     def update(self,rects):
+#         if len(rects) == 0:
+#             for ID in list(self.disappeared.keys()):
+#                 self.disappeared[ID] += 1
+#                 if self.disappeared[ID] > self.max_frame:
+# 					self.unregister(ID)
+#             return self.pedestrian    
+#         inputCentroids = np.zeros((len(rects), 2), dtype="int")
+#         for (i, (startX, startY, endX, endY)) in enumerate(rects):
+#             cX = int((startX + endX) / 2.0)
+# 			cY = int((startY + endY) / 2.0)
+# 			inputCentroids[i] = (cX, cY)
+
+
 
 def open_video(path: str) -> cv2.VideoCapture:
     """Opens a video file.
@@ -71,8 +116,8 @@ def main(video_path: str, title: str) -> NoReturn:
     wait_time = get_frame_display_time(video_capture)
 
     #initialise frame id 
-    y = 1
-
+    frame_id = 1
+    new_frame_id = 1
 
     try:
         # read the first frame
@@ -85,34 +130,47 @@ def main(video_path: str, title: str) -> NoReturn:
         while success: # and is_window_open(title):
             
             #overlaying bounding boxes
-            frameid_as_string = str(y)
+            frameid_as_string = str(frame_id)
             bounding_boxes = dict1[frameid_as_string]["bounding boxes"]
             detected_class = dict1[frameid_as_string]["detected classes"]
+            #create empty dictionary to append centroid every loop
+            centroid_dictionary = {}
+            centroid_dictionary[frame_id] = []
 
             for box, object in zip(bounding_boxes, detected_class):
+                #calculate centroid for pedestrians only
+                if object == "person":
+                  
+                    centroid_dictionary[frame_id].append((box[0] + (box[2]//2) , box[1] + (box[3]//2)))
+
+                    print(centroid_dictionary[frame_id])
+
+                    # if new_frame_id == frame_id:
+                    #     print('0')
+                    # elif ((centroid_dictionary[new_frame_id][0] -  centroid_dictionary[frame_id][0]) < 10):
+                    #     print('1)')
+                    # else:
+                    #     print ('2')
+                    # print (centroid_dictionary)
+
+                    # plot name and centroid
+                    for coord in centroid_dictionary[frame_id]:
+                        cv2.circle(frame, coord, 4, (0, 255, 0), -1)
+                        cv2.putText(frame, "ID: " + str(centroid_dictionary[frame_id]), (box[0], box[1]), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
+
+                    # cv2.circle(frame, (centroid_dictionary[frame_id][0], centroid_dictionary[frame_id][1]), 4, (0, 255, 0), -1)
+                    # cv2.putText(frame, "ID: " + str(centroid_dictionary[frame_id]), (box[0], box[1]), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
+       
+                #plot rectangles
+                cv2.rectangle(frame, (box[0], box[1]), ((box[0] + box[2]) , box[1] + box[3]), colour[object], 2)
                 
-                if object == "car":              
-                    bgr = (225,225,225)          #white for cars
-                elif object == "person":
-                    bgr = (255,225,0)            #sky blue for people
-                elif object == "truck":
-                    bgr = (255,0,0)              #blue for trucks  
-                elif object == "bicycle":
-                    bgr = (0,225,0)              #green for bikes
-                elif object == "bus":
-                    bgr = (0,225,225)            #yellow for buses 
-                elif object == "motorbike":
-                    bgr = (255,0,225)            #pink for motorbike          
-                
-                cv2.rectangle(frame, (box[0], box[1]), ((box[0] + box[2]) , box[1] + box[3]), bgr, 2)
-           
             
             # shrink it
             smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
 
             #next frame
-            y += 1
-
+            frame_id += 1
+            new_frame_id = frame_id + 1
 
             # display it
             cv2.imshow(title, smaller_image)
