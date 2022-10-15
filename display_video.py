@@ -19,36 +19,6 @@ colour = {
     "bus"      :(0,225,225)   ,        #yellow for buses 
     "motorbike":(255,0,225)            #pink for motorbike 
  }
-# Centroid tracking
-# class Tracker():
-#     def __init__(self, max_frame = 10):
-#         self.nextID = 0
-#         self.pedestrian = OrderedDict()
-#         self.disappeared = OrderedDict()
-#         self.max_frame = max_frame
-    
-#     def register(self, centroid):
-#         self.pedestrian[self.nextID] = centroid
-#         self.disappeared[self.nextID] = 0
-#         self.nextID += 1
-    
-#     def unregister(self, ID):
-#         del self.pedestrian[ID]
-#         del self.disappeared[ID]
-
-#     def update(self,rects):
-#         if len(rects) == 0:
-#             for ID in list(self.disappeared.keys()):
-#                 self.disappeared[ID] += 1
-#                 if self.disappeared[ID] > self.max_frame:
-# 					self.unregister(ID)
-#             return self.pedestrian    
-#         inputCentroids = np.zeros((len(rects), 2), dtype="int")
-#         for (i, (startX, startY, endX, endY)) in enumerate(rects):
-#             cX = int((startX + endX) / 2.0)
-# 			cY = int((startY + endY) / 2.0)
-# 			inputCentroids[i] = (cX, cY)
-
 
 
 def open_video(path: str) -> cv2.VideoCapture:
@@ -164,7 +134,7 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
                             else:
                                 personID += 1                   
                         except:
-                            #if the previous frame doesnt have coordinates, then ignore that frame
+                            #if the previous frame doesnt detect a person, then ignore that frame
                             continue
   
 
