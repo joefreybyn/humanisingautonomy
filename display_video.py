@@ -5,7 +5,7 @@ import cv2
 import json
 from collections import OrderedDict
 import numpy as np
-
+import math
 from cv2 import FONT_HERSHEY_COMPLEX
 from cv2 import FONT_HERSHEY_SCRIPT_COMPLEX
 from cv2 import FONT_HERSHEY_PLAIN
@@ -101,9 +101,9 @@ def is_window_open(title: str) -> bool:
     return cv2.getWindowProperty(title, cv2.WND_PROP_VISIBLE) >= 1
 
 
-def main(video_path: str, title: str) -> NoReturn:
+def main(video_path: str, json_path: str, title: str) -> NoReturn:
     #converting json file to a dictionary
-    with open(JSON_PATH, 'r') as detection_output:
+    with open(json_path, 'r') as detection_output:
         dict = json.load(detection_output)
     
     """Displays a video at half size until it is complete or the 'q' key is pressed.
@@ -119,7 +119,7 @@ def main(video_path: str, title: str) -> NoReturn:
 
     #initialise frame id 
     frame_id = 1
-    new_frame_id = 1
+    personID = 0
 
     try:
         # read the first frame
@@ -128,6 +128,9 @@ def main(video_path: str, title: str) -> NoReturn:
         # create the window
         cv2.namedWindow(title, cv2.WINDOW_AUTOSIZE)
 
+        #create empty dictionary for centroid to append centroid every loop
+        centroid = {}
+       
         # run whilst there are frames and the window is still open
         while success: # and is_window_open(title):
             
@@ -135,10 +138,8 @@ def main(video_path: str, title: str) -> NoReturn:
             frameid_as_string = str(frame_id)
             bounding_boxes = dict[frameid_as_string]["bounding boxes"]
             detected_class = dict[frameid_as_string]["detected classes"]
-            #create empty dictionary to append centroid every loop
-            centroid = {}
+            #create empty list for the centroid per frame 
             centroid[frame_id] = []
-
             for box, object in zip(bounding_boxes, detected_class):
                 """taking elements from bounding_boxes 
                  x = top left x coordinate
@@ -150,37 +151,38 @@ def main(video_path: str, title: str) -> NoReturn:
                 
                 #calculate centroid for pedestrians only
                 if object == "person":
-                  
                     centroid[frame_id].append((x + (w//2) , y + (h//2)))
 
-                    # print(centroid[frame_id])
-
-                    # if new_frame_id == frame_id:
-                    #     print('0')
-                    # elif ((centroid_dictionary[new_frame_id][0] -  centroid_dictionary[frame_id][0]) < 10):
-                    #     print('1)')
-                    # else:
-                    #     print ('2')
-                    # print (centroid_dictionary)
-
-                    # plot name and centroid
                     for coord in centroid[frame_id]:
-                        cv2.circle(frame, coord, 4, (0, 255, 0), -1)
-                        cv2.putText(frame, "ID: " + str(centroid[frame_id]), (x, y), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
+                        #calcualate Euclidian distance between current frame and previous frame
+                        #if the distance is less than 100 then ID will stay the same
+                        #otherwise, increment
+                        try:
+                            p = math.hypot((centroid[frame_id][0][0] - centroid[frame_id-1][0][0]), (centroid[frame_id][0][1] - centroid[frame_id-1][0][1]))
+                            if p < 100:
+                                personID == personID     
+                            else:
+                                personID += 1                   
+                        except:
+                            #if the previous frame doesnt have coordinates, then ignore that frame
+                            continue
+  
 
-                    # cv2.circle(frame, (centroid_dictionary[frame_id][0], centroid_dictionary[frame_id][1]), 4, (0, 255, 0), -1)
-                    # cv2.putText(frame, "ID: " + str(centroid_dictionary[frame_id]), (box[0], box[1]), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
-       
+                        # plot name and centroid
+                        cv2.circle(frame, coord, 4, (0, 255, 0), -1)
+                        cv2.putText(frame, "ID: " + str(personID), (x, y), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
+                        
                 #plot rectangles
                 cv2.rectangle(frame, (x, y), ((x + w) , (y + h)), colour[object], 2)
-                
             
-            # shrink it
-            smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
 
+            
+            
             #next frame
             frame_id += 1
-            new_frame_id = frame_id + 1
+
+            # shrink it
+            smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
 
             # display it
             cv2.imshow(title, smaller_image)
@@ -199,4 +201,4 @@ def main(video_path: str, title: str) -> NoReturn:
 if __name__ == "__main__":
     VIDEO_PATH = "resources/video_1.mp4"
     JSON_PATH = "resources/video_1_detections.json"
-    main(VIDEO_PATH, "My Video")
+    main(VIDEO_PATH, JSON_PATH, "My Video")

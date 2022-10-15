@@ -70,13 +70,3 @@ for key in centroid:
 
                 
 
-            for pt in current_frame_center_points:
-                for pt_prev in prev_frame_center_points:
-                    distance= math.hypot(pt[0] -pt_prev[0], pt[1] -pt_prev[1])
-                    # if the Euclidean distance between objects in previous frma 
-                    # and current frame is less than 50 then add object for tracking
-                    if distance<55:
-                        tracking_people[person_id]=pt
-                        person_id+=1
- 
-        # prev_frame_center_points=current_frame_center_points.copy()
