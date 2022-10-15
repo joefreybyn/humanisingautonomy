@@ -88,9 +88,13 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
     wait_time = get_frame_display_time(video_capture)
 
     #initialise frame id 
-    frame_id = 1
+    frame_id = 0
     personID = 0
-
+    
+    #create empty dictionary for centroid to append centroid every loop
+    centroid = {}
+    centroid_prev = {}
+    tracker = {}
     try:
         # read the first frame
         success, frame = video_capture.read()
@@ -98,18 +102,20 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
         # create the window
         cv2.namedWindow(title, cv2.WINDOW_AUTOSIZE)
 
-        #create empty dictionary for centroid to append centroid every loop
-        centroid = {}
+  
        
         # run whilst there are frames and the window is still open
         while success: # and is_window_open(title):
-            
+            #next frame
+            frame_id += 1
             #retrieve bounding boxes and classes from json file
             frameid_as_string = str(frame_id)
             bounding_boxes = dict[frameid_as_string]["bounding boxes"]
             detected_class = dict[frameid_as_string]["detected classes"]
             #create empty list for the centroid per frame 
             centroid[frame_id] = []
+            centroid_prev[frame_id] = []
+            tracker[personID] = []
             for box, object in zip(bounding_boxes, detected_class):
                 """taking elements from bounding_boxes 
                  x = top left x coordinate
@@ -122,34 +128,35 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
                 #calculate centroid for pedestrians only
                 if object == "person":
                     centroid[frame_id].append((x + (w//2) , y + (h//2)))
+                    if frame_id > 1 :
+                        centroid_prev[frame_id] = centroid[frame_id-1]
+
 
                     for coord in centroid[frame_id]:
-                        #calcualate Euclidian distance between current frame and previous frame
-                        #if the distance is less than 100 then ID will stay the same
-                        #otherwise, increment
-                        try:
-                            p = math.hypot((centroid[frame_id][0][0] - centroid[frame_id-1][0][0]), (centroid[frame_id][0][1] - centroid[frame_id-1][0][1]))
-                            if p < 100:
-                                personID == personID     
-                            else:
-                                personID += 1                   
-                        except:
-                            #if the previous frame doesnt detect a person, then ignore that frame
-                            continue
-  
+                        for coord_prev in centroid_prev[frame_id]:
+                            #calcualate Euclidian distance between current frame and previous frame
+                            #if the distance is less than 100 then ID will stay the same
+                            #otherwise, increment
+                            # try:
+                                p = math.hypot((coord[0] - coord_prev[0]), (coord[1] - coord_prev[1]))
+                                if p < 100:
+                                    personID == personID
+                                else:
+                                    personID += 1   
+                                # plot name and centroid
+                                cv2.circle(frame, coord, 4, (0, 255, 0), -1)
+                                cv2.putText(frame, "ID: " + str(personID), (x, y), FONT_HERSHEY_PLAIN , 2, (255,225,0), 2)                
+                            # except:
+                            #     #if the previous frame doesnt detect a person, then ignore that frame
+                            #     continue
+                      
 
-                        # plot name and centroid
-                        cv2.circle(frame, coord, 4, (0, 255, 0), -1)
-                        cv2.putText(frame, "ID: " + str(personID), (x, y), FONT_HERSHEY_PLAIN , 1.5, (255,225,0), 2)
+
+
+
                         
                 #plot rectangles
                 cv2.rectangle(frame, (x, y), ((x + w) , (y + h)), colour[object], 2)
-            
-
-            
-            
-            #next frame
-            frame_id += 1
 
             # shrink it
             smaller_image = cv2.resize(frame, (floor(width // 2), floor(height // 2)))
