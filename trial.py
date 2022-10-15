@@ -1,6 +1,6 @@
 from math import floor
 from typing import NoReturn
-
+import math
 import cv2
 import json
 with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections.json', 'r') as f:
@@ -48,10 +48,35 @@ with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections
 
 # p1 = Person("John", 36)
 # p1.myfunc()
+centroid = {1: [], 2: [(981, 733), (1091, 734)], 3: [(1090, 731)], 4: [], 5: [(979, 735)], 6: [(976, 736), (1113, 731)], 7: [(911, 728), (973, 738)], 8: [(974, 741)], 9: [(971, 741)]}
+current_frame = 3
+prev_frame = current_frame- 1
 
-# x = {}
-# for y in range (3):
-#     x[y] = (1, 1)
-#     for z in range (2):
-#         x[z].update(2,2)
-# print(x)
+# print(centroid[2][0])
+# y = math.hypot((centroid[current_frame][0][0]-centroid[prev_frame][1][0]), (centroid[current_frame][0][1]- centroid[prev_frame][0][1]))
+# print(y)
+for key in centroid:
+    
+#   # try:
+#      for pt in key:
+#       # for x in n:
+#       #    y = math.hypot((centroid[key][x][0]-centroid[key-1][x][0]), (centroid[key][x][1]-centroid[key-1][x][1]))
+         print(centroid[key])
+  # except:
+  #   print('0')
+
+
+  
+
+                
+
+            for pt in current_frame_center_points:
+                for pt_prev in prev_frame_center_points:
+                    distance= math.hypot(pt[0] -pt_prev[0], pt[1] -pt_prev[1])
+                    # if the Euclidean distance between objects in previous frma 
+                    # and current frame is less than 50 then add object for tracking
+                    if distance<55:
+                        tracking_people[person_id]=pt
+                        person_id+=1
+ 
+        # prev_frame_center_points=current_frame_center_points.copy()
