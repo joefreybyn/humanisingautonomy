@@ -143,24 +143,24 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
                         trackers_prev[current_frame_num] = trackers[current_frame_num-1]
 
                     #loop to compare Euclidian distance between all points in current frame and previous frame  
-                    for each_tracker in trackers[current_frame_num]:
+                    for tracker in trackers[current_frame_num]:
                         least_distance = 101   #starter value to be compared to each Euclidian distance
-                        for each_tracker_prev in trackers_prev[current_frame_num]:
+                        for tracker_prev in trackers_prev[current_frame_num]:
                            
                             #calculate Euclidian distance between current frame and previous frame
-                            p = math.hypot((each_tracker.centroid[0] - each_tracker_prev.centroid[0]), (each_tracker.centroid[1] - each_tracker_prev.centroid[1]))
+                            Euclid_distance = math.hypot((tracker.centroid[0] - tracker_prev.centroid[0]), (tracker.centroid[1] - tracker_prev.centroid[1]))
                             
                             #if the Euclidian distance is less than 100 then ID will stay the same
-                            if p < 100: 
+                            if Euclid_distance < 100: 
                                 #whichever is the minimum would copy the ID number of the previous ID number
-                                least_distance = min(p,least_distance) 
-                                if p == least_distance:
-                                    nearest_pt = each_tracker_prev
-                                    each_tracker.personID = nearest_pt.personID
+                                least_distance = min(Euclid_distance,least_distance) 
+                                if Euclid_distance == least_distance:
+                                    nearest_pt = tracker_prev
+                                    tracker.personID = nearest_pt.personID
     
                     # plot ID number and centroid
-                    cv2.circle(frame, each_tracker.centroid, 4, (0, 255, 0), -1)
-                    cv2.putText(frame, "ID: " + str(each_tracker.personID), (x, y), FONT_HERSHEY_PLAIN , 2, (255,225,0), 2)                
+                    cv2.circle(frame, tracker.centroid, 4, (0, 255, 0), -1)
+                    cv2.putText(frame, "ID: " + str(tracker.personID), (x, y), FONT_HERSHEY_PLAIN , 2, (255,225,0), 2)                
                         
                 #plot rectangles
                 cv2.rectangle(frame, (x, y), ((x + w) , (y + h)), colour[object], 2)
