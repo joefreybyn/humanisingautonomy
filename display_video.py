@@ -4,13 +4,10 @@ from typing import NoReturn
 
 import cv2
 import json
-
-
 import math
-from cv2 import FONT_HERSHEY_COMPLEX
-from cv2 import FONT_HERSHEY_SCRIPT_COMPLEX
 from cv2 import FONT_HERSHEY_PLAIN
 
+# A log of each centroid with their ID
 class Tracker:
   def __init__(self, id, centroid):
     self.personID = id
@@ -77,10 +74,7 @@ def is_window_open(title: str) -> bool:
 
 
 def main(video_path: str, json_path: str, title: str) -> NoReturn:
-    #converting json file to a dictionary
-    with open(json_path, 'r') as detection_output:
-        dict = json.load(detection_output)
-    
+
     """Displays a video at half size until it is complete or the 'q' key is pressed.
 
     Args:
@@ -91,16 +85,19 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
     video_capture = open_video(video_path)
     width, height = get_frame_dimensions(video_capture)
     wait_time = get_frame_display_time(video_capture)
-
-    #initialise frame number
+    
+    #converting json file to a dictionary
+    with open(json_path, 'r') as detection_output:
+        dict = json.load(detection_output)
+    
+    #initialise frame number and personal ID
     current_frame_num = 0
     personID = 1
-    finalpersonID = 1
-    #create empty dictionary for centroid to append centroid every loop
-    centroids = {}
-    centroids_prev = {}
+
+    #create empty dictionary to append centroid every loop
     trackers = {}
     trackers_prev = {}
+
     try:
         # read the first frame
         success, frame = video_capture.read()
@@ -110,17 +107,20 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
        
         # run whilst there are frames and the window is still open
         while success: # and is_window_open(title):
+
             #next frame
             current_frame_num += 1
+
             #retrieve bounding boxes and classes from json file
             frameid_as_string = str(current_frame_num)
             bounding_boxes = dict[frameid_as_string]["bounding boxes"]
             detected_class = dict[frameid_as_string]["detected classes"]
+
             #create empty list for the centroid per frame 
-            centroids[current_frame_num] = []
-            centroids_prev[current_frame_num] = []
             trackers[current_frame_num] = []
             trackers_prev[current_frame_num] = []
+
+            #zip function to bind bounding boxes and detected class together
             for box, object in zip(bounding_boxes, detected_class):
                 """taking elements from bounding_boxes 
                  x = top left x coordinate
@@ -133,41 +133,34 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
                 #for every pedestrian, calculate centroid and append to centroid dictionary
                 if object == "person":
 
-                    centroids[current_frame_num].append((x + (w//2) , y + (h//2)))
+                    #each centroid would be appended to the trackers dictionary along with an ID number
                     trackers[current_frame_num].append(Tracker(personID, (x + (w//2) , y + (h//2))))
-                    # personID += 1
+                    personID += 1
   
-                    #from frame 2, shift it by 1
+                    #previous frame to be used as reference frame
+                    #from frame 2, shift it by 1 
                     if current_frame_num > 1 :
-                        centroids_prev[current_frame_num] = centroids[current_frame_num-1]
                         trackers_prev[current_frame_num] = trackers[current_frame_num-1]
-                    
-                    for coord in trackers[current_frame_num]:
-                        least_distance = 101
-                        for coord_prev in trackers_prev[current_frame_num]:
-                            #calcualate Euclidian distance between current frame and previous frame
-                            #if the distance is less than 100 then ID will stay the same
-                            #otherwise, increment
-                            p = math.hypot((coord.centroid[0] - coord_prev.centroid[0]), (coord.centroid[1] - coord_prev.centroid[1]))
-                
+
+                    #loop to compare Euclidian distance between all points in current frame and previous frame  
+                    for inst in trackers[current_frame_num]:
+                        least_distance = 101   #starter value to be compared to each Euclidian distance
+                        for inst_prev in trackers_prev[current_frame_num]:
+                           
+                            #calculate Euclidian distance between current frame and previous frame
+                            p = math.hypot((inst.centroid[0] - inst_prev.centroid[0]), (inst.centroid[1] - inst_prev.centroid[1]))
+                            
+                            #if the Euclidian distance is less than 100 then ID will stay the same
                             if p < 100: 
+                                #whichever is the minimum would copy the ID number of the previous ID number
                                 least_distance = min(p,least_distance) 
                                 if p == least_distance:
-                                    nearest_pt = coord_prev
-                                coord.personID = nearest_pt.personID
-                                    # least_distance = min(p,least_distance)
-                                    # if p == least_distance:
-                                # finalpersonID = finalpersonID
-                                personID += 1
-                                    # else:
-                                    #     personID += 1
-                            # else :
-                            #     finalpersonID = personID
-                            #     personID +=  1
+                                    nearest_pt = inst_prev
+                                inst.personID = nearest_pt.personID
     
-                     # plot name and centroid
-                    # cv2.circle(frame, coord, 4, (0, 255, 0), -1)
-                    cv2.putText(frame, "ID: " + str(coord.personID), (x, y), FONT_HERSHEY_PLAIN , 2, (255,225,0), 2)                
+                    # plot ID number and centroid
+                    cv2.circle(frame, inst.centroid, 4, (0, 255, 0), -1)
+                    cv2.putText(frame, "ID: " + str(inst.personID), (x, y), FONT_HERSHEY_PLAIN , 2, (255,225,0), 2)                
                         
                 #plot rectangles
                 cv2.rectangle(frame, (x, y), ((x + w) , (y + h)), colour[object], 2)
@@ -181,9 +174,10 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
             # test for quit key
             if cv2.waitKey(wait_time) == ord("q"):
                 break
-
+            
+            # #option to pause frame
             # if cv2.waitKey(wait_time) == ord('p'):
-            #     cv2.waitKey(-1) #wait until any key is pressed
+            #     cv2.waitKey(-1) 
 
             # read the next frame
             success, frame = video_capture.read()
@@ -192,6 +186,6 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    VIDEO_PATH = "resources/video_1.mp4"
-    JSON_PATH = "resources/video_1_detections.json"
+    VIDEO_PATH = "resources/video_3.mp4"
+    JSON_PATH = "resources/video_3_detections.json"  
     main(VIDEO_PATH, JSON_PATH, "My Video")
