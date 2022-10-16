@@ -143,24 +143,24 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
                         trackers_prev[current_frame_num] = trackers[current_frame_num-1]
 
                     #loop to compare Euclidian distance between all points in current frame and previous frame  
-                    for inst in trackers[current_frame_num]:
+                    for each_tracker in trackers[current_frame_num]:
                         least_distance = 101   #starter value to be compared to each Euclidian distance
-                        for inst_prev in trackers_prev[current_frame_num]:
+                        for each_tracker_prev in trackers_prev[current_frame_num]:
                            
                             #calculate Euclidian distance between current frame and previous frame
-                            p = math.hypot((inst.centroid[0] - inst_prev.centroid[0]), (inst.centroid[1] - inst_prev.centroid[1]))
+                            p = math.hypot((each_tracker.centroid[0] - each_tracker_prev.centroid[0]), (each_tracker.centroid[1] - each_tracker_prev.centroid[1]))
                             
                             #if the Euclidian distance is less than 100 then ID will stay the same
                             if p < 100: 
                                 #whichever is the minimum would copy the ID number of the previous ID number
                                 least_distance = min(p,least_distance) 
                                 if p == least_distance:
-                                    nearest_pt = inst_prev
-                                inst.personID = nearest_pt.personID
+                                    nearest_pt = each_tracker_prev
+                                    each_tracker.personID = nearest_pt.personID
     
                     # plot ID number and centroid
-                    cv2.circle(frame, inst.centroid, 4, (0, 255, 0), -1)
-                    cv2.putText(frame, "ID: " + str(inst.personID), (x, y), FONT_HERSHEY_PLAIN , 2, (255,225,0), 2)                
+                    cv2.circle(frame, each_tracker.centroid, 4, (0, 255, 0), -1)
+                    cv2.putText(frame, "ID: " + str(each_tracker.personID), (x, y), FONT_HERSHEY_PLAIN , 2, (255,225,0), 2)                
                         
                 #plot rectangles
                 cv2.rectangle(frame, (x, y), ((x + w) , (y + h)), colour[object], 2)
@@ -175,10 +175,6 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
             if cv2.waitKey(wait_time) == ord("q"):
                 break
             
-            # #option to pause frame
-            # if cv2.waitKey(wait_time) == ord('p'):
-            #     cv2.waitKey(-1) 
-
             # read the next frame
             success, frame = video_capture.read()
     finally:
@@ -186,6 +182,6 @@ def main(video_path: str, json_path: str, title: str) -> NoReturn:
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    VIDEO_PATH = "resources/video_3.mp4"
-    JSON_PATH = "resources/video_3_detections.json"  
+    VIDEO_PATH = "resources/video_2.mp4"
+    JSON_PATH = "resources/video_2_detections.json"  
     main(VIDEO_PATH, JSON_PATH, "My Video")
