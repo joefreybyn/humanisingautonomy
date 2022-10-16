@@ -38,32 +38,114 @@ with open('/Users/joefreybayan/Desktop/ha_challenge/resources/video_1_detections
 #         b = calculate_centroid(x[box])
 #         print (b)
 
-# class Person:
-#   def __init__(mysillyobject, name, age):
-#     mysillyobject.name = name
-#     mysillyobject.age = age
+class Dog:
 
-#   def myfunc(abc):
-#     print("Hello my name is " + abc.name)
+    def __init__(self, name):
+        self.name = name
+        self.tricks = []    # creates a new empty list for each dog
+
+    def add_trick(self, trick):
+        self.tricks.append(trick)
+
+d = Dog('Fido')
+e = Dog('Buddy')
+
+d.add_trick('roll over')
+e.add_trick('play dead')
+
+# ['roll over']
+# >>> e.tricks
+# ['play dead']
+
+class Tracker:
+  def __init__(self, id, centroid):
+    self.personID = id
+    self.centroid = centroid
+
+trackers = {1: [],
+2: [Tracker(0, (981, 733)), Tracker(1, (1091, 734))],
+3: [Tracker(1, (1090, 731))],
+4: [],
+5: [Tracker(1, (979, 735))],
+6: [Tracker(1, (976, 736)), Tracker(2, (1113, 731))]}
+
+trackers_in_current_frame = trackers[6]
+trackers_in_previous_frame = trackers[5]
+
+# for pt in current_centroids:
+#   for pt_prev in prev_centroids:
+#       p = math.hypot((pt[0] - pt_prev[0]), (pt[1] - pt_prev[1]))
+#       # if p < 100:
+        
+
+#compare current coordinates to previous coordinates
+
+for tracker in trackers_in_current_frame:
+  least_distance = 101
+
+  for prev_tracker in trackers_in_previous_frame:
+    p = math.hypot((tracker.centroid[0] - prev_tracker.centroid[0]), (tracker.centroid[1] - prev_tracker.centroid[1]))
+
+#if the distance between current and previous is less than 100 
+    if p < 100:
+
+#then whichever is the minimum would retain ID, others will be incremented
+      least_distance = min(p,least_distance) 
+      if p == least_distance:
+        min_distance_tracker = prev_tracker
+      tracker.personID = prev_tracker.personID
+
+  print(tracker.personID)
+
+#elif > 100 then increment 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       
+  
+
 
 # p1 = Person("John", 36)
 # p1.myfunc()
-centroid = {1: [], 2: [(981, 733), (1091, 734)], 3: [(1090, 731)], 4: [], 5: [(979, 735)], 6: [(976, 736), (1113, 731)], 7: [(911, 728), (973, 738)], 8: [(974, 741)], 9: [(971, 741)]}
-current_frame = 3
-prev_frame = current_frame- 1
+# centroid = {1: [], 2: [(981, 733), (1091, 734)], 3: [(1090, 731)], 4: [], 5: [(979, 735)], 6: [(976, 736), (1113, 731)], 7: [(911, 728), (973, 738)], 8: [(974, 741)], 9: [(971, 741)]}
+# current_frame = 3
+# prev_frame = current_frame- 1
 
 # print(centroid[2][0])
 # y = math.hypot((centroid[current_frame][0][0]-centroid[prev_frame][1][0]), (centroid[current_frame][0][1]- centroid[prev_frame][0][1]))
 # print(y)
-for key in centroid:
+# for key in centroid:
     
-#   # try:
-#      for pt in key:
-#       # for x in n:
-#       #    y = math.hypot((centroid[key][x][0]-centroid[key-1][x][0]), (centroid[key][x][1]-centroid[key-1][x][1]))
-         print(centroid[key])
-  # except:
-  #   print('0')
+# #   # try:
+# #      for pt in key:
+# #       # for x in n:
+# #       #    y = math.hypot((centroid[key][x][0]-centroid[key-1][x][0]), (centroid[key][x][1]-centroid[key-1][x][1]))
+#          print(centroid[key])
+#   # except:
+#   #   print('0')
 
 
   
